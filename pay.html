@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>企业邮箱发信API · 支付</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f4f6fa; color: #1c2333; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px 0; }
+.page { position: relative; width: 100%; display: flex; align-items: center; justify-content: center; }
+.page .bg { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; pointer-events: none; }
+.page::after { content: ""; position: fixed; inset: 0; background: rgba(255,255,255,.72); z-index: 1; }
+.inner { position: relative; z-index: 2; width: 100%; max-width: 440px; padding: 0 24px; text-align: center; }
+h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; color: #1c2333; }
+.sub { font-size: 14px; color: #6b7280; margin-bottom: 32px; }
+.pay-title { font-size: 14px; color: #6b7280; margin-bottom: 12px; text-align: left; }
+.amount-row { display: flex; gap: 12px; margin-bottom: 22px; }
+.amount-opt { flex: 1; padding: 12px 0; border: 1px solid #d7dce5; border-radius: 8px; background: #fff; font-size: 15px; color: #4b5563; cursor: pointer; user-select: none; transition: border-color .2s, background .2s, color .2s; }
+.amount-opt:hover { border-color: #9ab8e6; color: #1c2333; }
+.amount-opt.active { border-color: #2f6fed; background: #eef4ff; color: #1c2333; }
+.amount-opt small { display: block; font-size: 12px; color: #8a94a6; margin-top: 2px; }
+.amount-opt.active small { color: #2f6fed; }
+.pay-row { display: flex; gap: 12px; margin-bottom: 24px; }
+.pay-opt { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 0; border: 1px solid #d7dce5; border-radius: 8px; background: #fff; font-size: 15px; color: #4b5563; cursor: pointer; user-select: none; transition: border-color .2s, background .2s, color .2s; }
+.pay-opt:hover { border-color: #9ab8e6; color: #1c2333; }
+.pay-opt.active { border-color: #2f6fed; background: #eef4ff; color: #1c2333; }
+.pay-opt .fa-weixin { color: #07c160; }
+.pay-opt .fa-alipay { color: #1677ff; }
+.pay-opt.active .fa-weixin, .pay-opt.active .fa-alipay { color: inherit; }
+.qr-box { width: 220px; height: 220px; margin: 0 auto 16px; background: #fff; border: 1px solid #e3e8f0; border-radius: 12px; padding: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px -12px rgba(31,58,110,.18); }
+.qr-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 6px; }
+.qr-caption { font-size: 13px; color: #6b7280; margin-bottom: 22px; }
+.qr-caption strong { color: #2f6fed; font-weight: 600; }
+.paid-btn { width: 100%; padding: 14px; font-size: 15px; font-weight: 600; letter-spacing: 1px; color: #2f6fed; background: #fff; border: 1px solid #b9cdf0; border-radius: 8px; cursor: pointer; margin-bottom: 8px; transition: background .2s, border-color .2s, color .2s; }
+.paid-btn:hover { background: #eef4ff; border-color: #2f6fed; color: #1c2333; }
+.pay-hint { font-size: 12px; color: #8a94a6; text-align: center; min-height: 16px; margin-bottom: 26px; }
+.pay-hint.err { color: #e5484d; }
+.service { padding-top: 20px; border-top: 1px solid #e3e8f0; text-align: left; }
+.service .title { font-size: 13px; color: #8a94a6; margin-bottom: 10px; }
+.service .phone { font-size: 19px; font-weight: 600; letter-spacing: 1px; margin-bottom: 14px; color: #1c2333; }
+.service .phone i { color: #2f6fed; margin-right: 8px; font-size: 16px; }
+.channels { display: flex; gap: 18px; font-size: 13px; color: #6b7280; flex-wrap: wrap; }
+.channels i { margin-right: 5px; }
+@media (max-width: 420px) {
+  .qr-box { width: 190px; height: 190px; }
+  .amount-row { gap: 8px; }
+  .amount-opt { font-size: 14px; padding: 10px 0; }
+  h2 { font-size: 22px; }
+}
+</style>
+</head>
+<body>
+<div class="page"><img class="bg" referrerpolicy="no-referrer" src="http://shp.qpic.cn/collector/2515952074/582878ca-421b-49fb-b0bc-46c7c63a2b66/0" alt=""><div class="inner"><div class="pay-title">选择金额</div><div class="amount-row"><div class="amount-opt active" data-cny="50">包年<small>50 元</small></div><div class="amount-opt" data-cny="24">包季<small>24 元</small></div><div class="amount-opt" data-cny="8">包月<small>8 元</small></div></div><div class="pay-title">选择支付方式</div><div class="pay-row"><div class="pay-opt active" data-pay="wx"><i class="fa-brands fa-weixin"></i>微信支付</div><div class="pay-opt" data-pay="ali"><i class="fa-brands fa-alipay"></i>支付宝</div></div><div class="qr-box" id="qrBox"><img id="qrImg" referrerpolicy="no-referrer" src="http://shp.qpic.cn/collector/2515952074/6ee3a12b-814f-4cab-982f-b5a658f55d2f/0" alt="收款二维码"></div><div class="qr-caption">扫码支付 <strong id="qrAmount">50 元</strong> · <span id="qrPayName">微信支付</span></div><button class="paid-btn" id="paidBtn">我已完成支付</button><div class="pay-hint" id="payHint"></div><div class="service"><div class="title">售后联系方式</div><div class="phone"><i class="fa-solid fa-phone"></i>189 8510 7391</div><div class="channels"><span><i class="fa-brands fa-telegram"></i>Telegram</span><span><i class="fa-brands fa-dingtalk"></i>钉钉</span><span><i class="fa-brands fa-weixin"></i>微信企业同号</span></div></div></div></div>
+<script>
+var QR_WX = "http://shp.qpic.cn/collector/2515952074/6ee3a12b-814f-4cab-982f-b5a658f55d2f/0";
+var QR_ALI = "http://shp.qpic.cn/collector/2515952074/3a407f08-49ca-4334-af30-8295c39b7583/0";
+var API_BASE = "http://yuzusoft.pw/mail/goumai.php";
+var storageKey = "mail_contact";
+var lastOrderKey = "mail_last_order_time";
+var qrImg = document.getElementById("qrImg");
+var qrAmount = document.getElementById("qrAmount");
+var qrPayName = document.getElementById("qrPayName");
+var payHint = document.getElementById("payHint");
+var paidBtn = document.getElementById("paidBtn");
+var amountOpts = document.querySelectorAll(".amount-opt");
+var payOpts = document.querySelectorAll(".pay-opt");
+var curCny = "50";
+var curPay = "wx";
+
+amountOpts.forEach(function (opt) {
+  opt.addEventListener("click", function () {
+    amountOpts.forEach(function (o) { o.classList.remove("active"); });
+    opt.classList.add("active");
+    curCny = opt.getAttribute("data-cny");
+    qrAmount.textContent = curCny + " 元";
+  });
+});
+
+payOpts.forEach(function (opt) {
+  opt.addEventListener("click", function () {
+    payOpts.forEach(function (o) { o.classList.remove("active"); });
+    opt.classList.add("active");
+    curPay = opt.getAttribute("data-pay");
+    qrImg.src = curPay === "wx" ? QR_WX : QR_ALI;
+    qrImg.referrerPolicy = "no-referrer";
+    qrPayName.textContent = curPay === "wx" ? "微信支付" : "支付宝";
+  });
+});
+
+function nowMinuteString() {
+  var d = new Date();
+  function pad(n) { return n < 10 ? "0" + n : "" + n; }
+  return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()) + " " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+function showHint(msg, isErr) {
+  payHint.textContent = msg;
+  payHint.className = "pay-hint" + (isErr ? " err" : "");
+}
+
+paidBtn.addEventListener("click", function () {
+  var val = "";
+  try { val = (localStorage.getItem(storageKey) || "").trim(); } catch (err) {}
+  if (!val) {
+    showHint("未找到联系方式，请返回上一页填写", true);
+    return;
+  }
+
+  try {
+    var lastOrder = localStorage.getItem(lastOrderKey);
+    if (lastOrder) {
+      var parsed = JSON.parse(lastOrder);
+      if (parsed.sms === val) {
+        var diff = Date.now() - parsed.time;
+        if (diff < 60000) {
+          var remain = Math.ceil((60000 - diff) / 1000);
+          showHint("同一联系方式 1 分钟内不可重复购买，请 " + remain + " 秒后再试", true);
+          return;
+        }
+      }
+    }
+  } catch (err) {}
+
+  var payDate = nowMinuteString();
+  var url = API_BASE
+    + "?cny=" + encodeURIComponent(curCny)
+    + "&sms=" + encodeURIComponent(val)
+    + "&date=" + encodeURIComponent(payDate);
+
+  showHint("正在提交订单...", false);
+
+  fetch(url, { method: "GET", mode: "cors" })
+    .then(function () {
+      try { localStorage.setItem(lastOrderKey, JSON.stringify({ sms: val, time: Date.now() })); } catch (err) {}
+      showHint("订单已提交，正在跳转...", false);
+      window.location.href = "public.html";
+    })
+    .catch(function () {
+      try { localStorage.setItem(lastOrderKey, JSON.stringify({ sms: val, time: Date.now() })); } catch (err) {}
+      showHint("网络异常，已记录订单，请稍后联系客服", true);
+      setTimeout(function () { window.location.href = "public.html"; }, 1200);
+    });
+});
+</script>
+<meta name="referrer" content="no-referrer">
+</body>
+</html>
